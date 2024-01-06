@@ -1,0 +1,6 @@
+app:
+  name: golang-clean-architecture
+
+log:
+  format: text
+  level: info
