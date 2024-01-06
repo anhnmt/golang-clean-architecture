@@ -1,51 +1,58 @@
 package logger
 
 import (
-	"log"
-	"log/slog"
+	"io"
+	"os"
 	"path/filepath"
+	"strconv"
+	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
 )
 
 func New(cfg config.Log) {
-	replace := func(groups []string, a slog.Attr) slog.Attr {
-		// Remove the directory from the source's filename.
-		if a.Key == slog.SourceKey {
-			source := a.Value.Any().(*slog.Source)
-			if source.File == "" {
-				return slog.Attr{}
-			}
+	var writer []io.Writer
 
-			source.File = filepath.Base(source.File)
-		}
-
-		return a
-	}
-
-	var level slog.Level
-	err := level.UnmarshalText([]byte(cfg.Level))
-	if err != nil {
-		level = slog.LevelInfo
-	}
-
-	writer := log.Writer()
-
-	opts := &slog.HandlerOptions{
-		Level:       level,
-		AddSource:   true,
-		ReplaceAttr: replace,
-	}
-
-	// slog handler
-	var handler slog.Handler
-
+	// UNIX Time is faster and smaller than most timestamps
 	if cfg.Format == "json" {
-		handler = slog.NewJSONHandler(writer, opts)
+		writer = append(writer, os.Stdout)
 	} else {
-		handler = slog.NewTextHandler(writer, opts)
+		writer = append(writer, &zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+			NoColor:    false,
+		})
 	}
 
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	if cfg.File != "" {
+		writer = append(writer, &lumberjack.Logger{
+			Filename:   cfg.File,
+			MaxSize:    cfg.MaxSize, // megabytes
+			MaxBackups: cfg.MaxBackups,
+			MaxAge:     cfg.MaxAge, // days
+		})
+	}
+
+	level, err := zerolog.ParseLevel(cfg.Level)
+	if err == nil {
+		zerolog.SetGlobalLevel(level)
+	}
+
+	zerolog.TimeFieldFormat = time.RFC3339
+
+	// Caller Marshal Function
+	zerolog.CallerMarshalFunc = func(_ uintptr, file string, line int) string {
+		return filepath.Base(file) + ":" + strconv.Itoa(line)
+	}
+
+	log.Logger = zerolog.
+		New(zerolog.MultiLevelWriter(writer...)).
+		With().
+		Timestamp().
+		Caller().
+		Logger()
 }

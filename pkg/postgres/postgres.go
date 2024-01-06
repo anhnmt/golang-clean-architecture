@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/url"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 )
 
 type Postgres struct {
-	pool *pgxpool.Pool
+	Pool *pgxpool.Pool
 }
 
 func New(cfg config.Postgres) (*Postgres, error) {
@@ -71,19 +70,14 @@ func New(cfg config.Postgres) (*Postgres, error) {
 	}
 
 	pg := &Postgres{
-		pool: pool,
+		Pool: pool,
 	}
-	slog.Info("Postgres connected")
 
 	return pg, nil
 }
 
-func (p *Postgres) GetPool() *pgxpool.Pool {
-	return p.pool
-}
-
 func (p *Postgres) Close() {
-	if p.pool != nil {
-		p.pool.Close()
+	if p.Pool != nil {
+		p.Pool.Close()
 	}
 }
