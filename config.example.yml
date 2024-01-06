@@ -4,3 +4,16 @@ app:
 log:
   format: text
   level: info
+
+postgres:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  database: postgres
+  ssl_mode: disable
+  max_conns: 10
+  min_conns: 1
+  max_conn_idle_time: 5m
+  max_conn_lifetime: 5m
+  conn_timeout: 5s

@@ -6,6 +6,7 @@ import (
 
 	"github.com/anhnmt/golang-clean-architecture/cmd/server/config"
 	"github.com/anhnmt/golang-clean-architecture/pkg/logger"
+	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
 
 func main() {
@@ -19,5 +20,12 @@ func main() {
 	slog.Info("Hello, World!",
 		slog.Any("app", cfg.App),
 		slog.Any("log", cfg.Log),
+		slog.Any("postgres", cfg.Postgres),
 	)
+
+	_, err = postgres.New(cfg.Postgres)
+	if err != nil {
+		slog.Error("failed get postgres", slog.Any("error", err))
+		return
+	}
 }
