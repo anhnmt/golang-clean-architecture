@@ -6,7 +6,9 @@ type Postgres struct {
 	User     string `yaml:"user" json:"user,omitempty" env:"POSTGRES_USER" env-default:"postgres"`
 	Password string `yaml:"password" json:"password,omitempty" env:"POSTGRES_PASSWORD" env-default:"postgres"`
 	Database string `yaml:"database" json:"database,omitempty" env:"POSTGRES_DB" env-default:"postgres"`
-	SSLMode  string `yaml:"ssl_mode" json:"ssl_mode,omitempty" env:"POSTGRES_SSL_MODE" env-default:"disable"`
+
+	SSLMode string `yaml:"ssl_mode" json:"ssl_mode,omitempty" env:"POSTGRES_SSL_MODE" env-default:"disable"`
+	Migrate bool   `yaml:"migrate" json:"migrate,omitempty" env:"POSTGRES_MIGRATE" env-default:"true"`
 
 	MaxConns int32 `yaml:"max_conns" json:"max_conns,omitempty" env:"POSTGRES_MAX_CONNS" env-default:"10"`
 	MinConns int32 `yaml:"min_conns" json:"min_conns,omitempty" env:"POSTGRES_MIN_CONNS" env-default:"1"`
