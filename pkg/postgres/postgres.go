@@ -2,11 +2,17 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
 )
@@ -25,6 +31,18 @@ func New(cfg config.Postgres) (*Postgres, error) {
 
 	q := dsn.Query()
 	q.Add("sslmode", cfg.SSLMode)
+
+	// Migrate
+	if cfg.Migrate {
+		log.Info().Msg("Running migrations...")
+
+		err := Migrate(dsn.String())
+		if err != nil {
+			return nil, err
+		}
+
+		log.Info().Msg("Migrations completed")
+	}
 
 	poolConfig, err := pgxpool.ParseConfig(dsn.String())
 	if err != nil {
@@ -80,4 +98,21 @@ func (p *Postgres) Close() {
 	if p.Pool != nil {
 		p.Pool.Close()
 	}
+}
+
+func Migrate(dbUrl string) error {
+	dbUrl = strings.ReplaceAll(dbUrl, "postgres://", "pgx5://")
+	m, err := migrate.New("file://db/migrations", dbUrl)
+	if err != nil {
+		return err
+	}
+
+	defer m.Close()
+
+	err = m.Up() // or m.Step(2) if you want to explicitly set the number of migrations to run
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+
+	return nil
 }

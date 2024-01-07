@@ -26,7 +26,7 @@ func main() {
 
 	_, err = postgres.New(cfg.Postgres)
 	if err != nil {
-		panic(fmt.Errorf("failed get postgres: %w", err))
+		log.Panic().Err(err).Msg("failed to connect to postgres")
 		return
 	}
 }
