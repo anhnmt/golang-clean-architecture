@@ -3,6 +3,7 @@ module github.com/anhnmt/golang-clean-architecture
 go 1.21
 
 require (
+	github.com/google/uuid v1.5.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.5.1
 	github.com/rs/zerolog v1.31.0
