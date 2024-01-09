@@ -5,6 +5,16 @@ log:
   format: text
   level: info
 
+server:
+  pprof:
+    enable: true
+    host: 0.0.0.0
+    port: 6060
+  grpc:
+    host: 0.0.0.0
+    port: 5000
+    log_payload: true
+
 postgres:
   host: localhost
   port: 5432
