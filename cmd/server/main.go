@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/anhnmt/golang-clean-architecture/cmd/server/config"
+	"github.com/anhnmt/golang-clean-architecture/internal/server"
 	"github.com/anhnmt/golang-clean-architecture/pkg/logger"
-	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
 
 func main() {
@@ -24,9 +25,19 @@ func main() {
 		Any("postgres", cfg.Postgres).
 		Msg("Hello, World!")
 
-	_, err = postgres.New(cfg.Postgres)
+	// _, err = postgres.New(cfg.Postgres)
+	// if err != nil {
+	// 	log.Panic().Err(err).Msg("failed to connect to postgres")
+	// 	return
+	// }
+
+	srv := server.New(cfg.Server)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = srv.Start(ctx)
 	if err != nil {
-		log.Panic().Err(err).Msg("failed to connect to postgres")
-		return
+		log.Panic().Err(err).Msg("failed to start server")
 	}
 }
