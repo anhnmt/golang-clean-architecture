@@ -11,10 +11,10 @@ import (
 )
 
 type Config struct {
-	App      config.App      `yaml:"app" json:"app,omitempty"`
-	Log      config.Log      `yaml:"log" json:"log,omitempty"`
-	Postgres config.Postgres `yaml:"postgres" json:"postgres,omitempty"`
-	Server   config.Server   `yaml:"server" json:"server,omitempty"`
+	App      config.App      `yaml:"app" json:"app"`
+	Log      config.Log      `yaml:"log" json:"log"`
+	Postgres config.Postgres `yaml:"postgres" json:"postgres"`
+	Server   config.Server   `yaml:"server" json:"server"`
 }
 
 func New() (*Config, error) {

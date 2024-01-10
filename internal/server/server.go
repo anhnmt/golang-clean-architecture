@@ -37,7 +37,7 @@ func New(cfg config.Server) *Server {
 func (s *Server) Start(ctx context.Context) error {
 	g, _ := errgroup.WithContext(ctx)
 
-	if s.pprof.Enable {
+	if *s.pprof.Enable {
 		g.Go(func() error {
 			addr := fmt.Sprintf("%s:%d", s.pprof.Host, s.pprof.Port)
 			log.Info().Msgf("Starting pprof http://%s", addr)
@@ -51,7 +51,7 @@ func (s *Server) Start(ctx context.Context) error {
 		addr := fmt.Sprintf("%s:%d", s.grpc.Host, s.grpc.Port)
 		log.Info().Msgf("Starting application http://%s", addr)
 
-		grpcServer := NewGrpcServer(s.grpc.LogPayload)
+		grpcServer := NewGrpcServer(*s.grpc.LogPayload)
 		transcoder, err := vanguardgrpc.NewTranscoder(grpcServer)
 		if err != nil {
 			return err
