@@ -23,6 +23,7 @@ func main() {
 		Any("app", cfg.App).
 		Any("log", cfg.Log).
 		Any("postgres", cfg.Postgres).
+		Any("server", cfg.Server).
 		Msg("Hello, World!")
 
 	// _, err = postgres.New(cfg.App, cfg.Postgres)
