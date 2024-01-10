@@ -6,6 +6,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	"connectrpc.com/vanguard/vanguardgrpc"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/validator"
@@ -50,12 +51,20 @@ func (s *Server) Start(ctx context.Context) error {
 		addr := fmt.Sprintf("%s:%d", s.grpc.Host, s.grpc.Port)
 		log.Info().Msgf("Starting application http://%s", addr)
 
+		grpcServer := NewGrpcServer(s.grpc.LogPayload)
+		transcoder, err := vanguardgrpc.NewTranscoder(grpcServer)
+		if err != nil {
+			return err
+		}
+
 		// create new http server
 		s.srv = &http.Server{
 			Addr: addr,
-			// Use h2c, so we can serve HTTP/2 without TLS.
+			// We use the h2c package in order to support HTTP/2 without TLS,
+			// so we can handle gRPC requests, which requires HTTP/2, in
+			// addition to Connect and gRPC-Web (which work with HTTP 1.1).
 			Handler: h2c.NewHandler(
-				NewGrpcServer(s.grpc.LogPayload),
+				transcoder,
 				&http2.Server{},
 			),
 		}
