@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -43,6 +44,7 @@ func New(cfg config.Log) {
 	}
 
 	zerolog.TimeFieldFormat = time.RFC3339
+	zerolog.InterfaceMarshalFunc = sonic.Marshal
 
 	// Caller Marshal Function
 	zerolog.CallerMarshalFunc = func(_ uintptr, file string, line int) string {

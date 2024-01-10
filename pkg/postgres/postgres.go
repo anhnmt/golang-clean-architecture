@@ -21,19 +21,20 @@ type Postgres struct {
 	Pool *pgxpool.Pool
 }
 
-func New(cfg config.Postgres) (*Postgres, error) {
+func New(cfgApp config.App, cfgPostgres config.Postgres) (*Postgres, error) {
 	dsn := &url.URL{
 		Scheme: "postgres",
-		User:   url.UserPassword(cfg.User, cfg.Password),
-		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-		Path:   cfg.Database,
+		User:   url.UserPassword(cfgPostgres.User, cfgPostgres.Password),
+		Host:   fmt.Sprintf("%s:%d", cfgPostgres.Host, cfgPostgres.Port),
+		Path:   cfgPostgres.Database,
 	}
 
 	q := dsn.Query()
-	q.Add("sslmode", cfg.SSLMode)
+	q.Add("sslmode", cfgPostgres.SSLMode)
+	q.Add("application_name", cfgApp.Name)
 
 	// Migrate
-	if cfg.Migrate {
+	if cfgPostgres.Migrate {
 		log.Info().Msg("Running migrations...")
 
 		err := Migrate(dsn.String())
@@ -49,11 +50,11 @@ func New(cfg config.Postgres) (*Postgres, error) {
 		return nil, fmt.Errorf("poolConfig - pgxpool.ParseConfig: %w", err)
 	}
 
-	poolConfig.MaxConns = cfg.MaxConns
-	poolConfig.MinConns = cfg.MinConns
+	poolConfig.MaxConns = cfgPostgres.MaxConns
+	poolConfig.MinConns = cfgPostgres.MinConns
 
 	// Config maxConnIdleTime
-	maxConnIdleTime, err := time.ParseDuration(cfg.MaxConnIdleTime)
+	maxConnIdleTime, err := time.ParseDuration(cfgPostgres.MaxConnIdleTime)
 	if err != nil {
 		return nil, fmt.Errorf("maxConnIdleTime - time.ParseDuration: %w", err)
 	}
@@ -61,7 +62,7 @@ func New(cfg config.Postgres) (*Postgres, error) {
 	poolConfig.MaxConnIdleTime = maxConnIdleTime
 
 	// Config maxConnLifetime
-	maxConnLifetime, err := time.ParseDuration(cfg.MaxConnLifetime)
+	maxConnLifetime, err := time.ParseDuration(cfgPostgres.MaxConnLifetime)
 	if err != nil {
 		return nil, fmt.Errorf("maxConnLifetime - time.ParseDuration: %w", err)
 	}
@@ -69,7 +70,7 @@ func New(cfg config.Postgres) (*Postgres, error) {
 	poolConfig.MaxConnLifetime = maxConnLifetime
 
 	// Config connTimeout
-	connTimeout, err := time.ParseDuration(cfg.ConnTimeout)
+	connTimeout, err := time.ParseDuration(cfgPostgres.ConnTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("connTimeout - time.ParseDuration: %w", err)
 	}

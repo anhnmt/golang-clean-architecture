@@ -25,10 +25,10 @@ func main() {
 		Any("postgres", cfg.Postgres).
 		Msg("Hello, World!")
 
-	// _, err = postgres.New(cfg.Postgres)
+	// _, err = postgres.New(cfg.App, cfg.Postgres)
 	// if err != nil {
-	// 	log.Panic().Err(err).Msg("failed to connect to postgres")
-	// 	return
+	//     log.Panic().Err(err).Msg("failed to connect to postgres")
+	//     return
 	// }
 
 	srv := server.New(cfg.Server)

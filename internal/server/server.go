@@ -9,6 +9,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/validator"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -21,6 +22,8 @@ import (
 type Server struct {
 	pprof config.Pprof
 	grpc  config.Grpc
+
+	srv *http.Server
 }
 
 func New(cfg config.Server) *Server {
@@ -42,6 +45,54 @@ func (s *Server) Start(ctx context.Context) error {
 		})
 	}
 
+	// Serve the http server on the http listener.
+	g.Go(func() error {
+		addr := fmt.Sprintf("%s:%d", s.grpc.Host, s.grpc.Port)
+		log.Info().Msgf("Starting application http://%s", addr)
+
+		// create new http server
+		s.srv = &http.Server{
+			Addr: addr,
+			// Use h2c, so we can serve HTTP/2 without TLS.
+			Handler: h2c.NewHandler(
+				NewGrpcServer(s.grpc.LogPayload),
+				&http2.Server{},
+			),
+		}
+
+		// run the server
+		return s.srv.ListenAndServe()
+	})
+
+	return g.Wait()
+}
+
+func (s *Server) Close() error {
+	return s.srv.Close()
+}
+
+// InterceptorLogger adapts zerolog logger to interceptor logger.
+// This code is simple enough to be copied and not imported.
+func InterceptorLogger(l zerolog.Logger) logging.Logger {
+	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
+		log := l.With().Fields(fields).Logger()
+
+		switch lvl {
+		case logging.LevelDebug:
+			log.Debug().Msg(msg)
+		case logging.LevelInfo:
+			log.Info().Msg(msg)
+		case logging.LevelWarn:
+			log.Warn().Msg(msg)
+		case logging.LevelError:
+			log.Error().Msg(msg)
+		default:
+			panic(fmt.Sprintf("unknown level %v", lvl))
+		}
+	})
+}
+
+func NewGrpcServer(logPayload bool) *grpc.Server {
 	logger := InterceptorLogger(log.Logger)
 
 	logEvents := []logging.LoggableEvent{
@@ -50,7 +101,7 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 
 	// log payload if enabled
-	if s.grpc.LogPayload {
+	if logPayload {
 		logEvents = append(logEvents,
 			logging.PayloadReceived,
 			logging.PayloadSent,
@@ -78,28 +129,5 @@ func (s *Server) Start(ctx context.Context) error {
 		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 	)
 
-	// Serve the http server on the http listener.
-	g.Go(func() error {
-		addr := fmt.Sprintf("%s:%d", s.grpc.Host, s.grpc.Port)
-		log.Info().Msgf("Starting application http://%s", addr)
-
-		// create new http server
-		srv := &http.Server{
-			Addr: addr,
-			// Use h2c, so we can serve HTTP/2 without TLS.
-			Handler: h2c.NewHandler(
-				grpcServer,
-				&http2.Server{},
-			),
-			// ReadHeaderTimeout: 10 * time.Second,
-			// ReadTimeout:       1 * time.Minute,
-			// WriteTimeout:      1 * time.Minute,
-			// MaxHeaderBytes:    8 * 1024, // 8KiB
-		}
-
-		// run the server
-		return srv.ListenAndServe()
-	})
-
-	return g.Wait()
+	return grpcServer
 }
