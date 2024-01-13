@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -17,12 +16,14 @@ import (
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
 )
 
-type Postgres struct {
-	Pool *pgxpool.Pool
+var _ DBEngine = (*postgres)(nil)
+
+type postgres struct {
+	pool *pgxpool.Pool
 }
 
-func New(cfgApp config.App, cfgPostgres config.Postgres) (*Postgres, error) {
-	dsn := &url.URL{
+func New(cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, error) {
+	dsn := url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(cfgPostgres.User, cfgPostgres.Password),
 		Host:   fmt.Sprintf("%s:%d", cfgPostgres.Host, cfgPostgres.Port),
@@ -32,18 +33,6 @@ func New(cfgApp config.App, cfgPostgres config.Postgres) (*Postgres, error) {
 	q := dsn.Query()
 	q.Add("sslmode", cfgPostgres.SSLMode)
 	q.Add("application_name", cfgApp.Name)
-
-	// Migrate
-	if cfgPostgres.Migrate {
-		log.Info().Msg("Running migrations...")
-
-		err := Migrate(dsn.String())
-		if err != nil {
-			return nil, err
-		}
-
-		log.Info().Msg("Migrations completed")
-	}
 
 	poolConfig, err := pgxpool.ParseConfig(dsn.String())
 	if err != nil {
@@ -83,27 +72,41 @@ func New(cfgApp config.App, cfgPostgres config.Postgres) (*Postgres, error) {
 		return nil, fmt.Errorf("pgxpool.NewWithConfig err: %w", err)
 	}
 
-	err = pool.Ping(ctx)
-	if err != nil {
+	if err = pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("postgres ping err: %w", err)
 	}
 
-	pg := &Postgres{
-		Pool: pool,
+	// Migrate
+	if cfgPostgres.Migrate {
+		log.Info().Msg("Running migrations...")
+
+		if err = Migrate(dsn); err != nil {
+			return nil, fmt.Errorf("postgres migrate err: %w", err)
+		}
+
+		log.Info().Msg("Migrations completed")
+	}
+
+	pg := &postgres{
+		pool: pool,
 	}
 
 	return pg, nil
 }
 
-func (p *Postgres) Close() {
-	if p.Pool != nil {
-		p.Pool.Close()
+func (p *postgres) Close() {
+	if p.pool != nil {
+		p.pool.Close()
 	}
 }
 
-func Migrate(dbUrl string) error {
-	dbUrl = strings.ReplaceAll(dbUrl, "postgres://", "pgx5://")
-	m, err := migrate.New("file://db/migrations", dbUrl)
+func (p *postgres) Pool() *pgxpool.Pool {
+	return p.pool
+}
+
+func Migrate(db url.URL) error {
+	db.Scheme = "pgx5"
+	m, err := migrate.New("file://db/migrations", db.String())
 	if err != nil {
 		return err
 	}
