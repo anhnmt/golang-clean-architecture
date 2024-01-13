@@ -9,6 +9,7 @@ import (
 	"github.com/anhnmt/golang-clean-architecture/cmd/server/config"
 	"github.com/anhnmt/golang-clean-architecture/internal/server"
 	"github.com/anhnmt/golang-clean-architecture/pkg/logger"
+	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
 
 func main() {
@@ -26,11 +27,13 @@ func main() {
 		Any("server", cfg.Server).
 		Msg("Hello, World!")
 
-	// _, err = postgres.New(cfg.App, cfg.Postgres)
-	// if err != nil {
-	//     log.Panic().Err(err).Msg("failed to connect to postgres")
-	//     return
-	// }
+	_, cleanup, err := postgres.NewDBEngine(cfg.App, cfg.Postgres)
+	if err != nil {
+		log.Panic().Err(err).Msg("failed to connect to postgres")
+		return
+	}
+
+	defer cleanup()
 
 	srv := server.New(cfg.Server)
 
