@@ -7,6 +7,7 @@
 package postgres
 
 import (
+	"context"
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
 )
 
@@ -17,8 +18,8 @@ import (
 
 // Injectors from wire.go:
 
-func NewDBEngine(cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, func(), error) {
-	dbEngine, cleanup, err := DBEngineFunc(cfgApp, cfgPostgres)
+func NewDBEngine(ctx context.Context, cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, func(), error) {
+	dbEngine, cleanup, err := DBEngineFunc(ctx, cfgApp, cfgPostgres)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -29,8 +30,8 @@ func NewDBEngine(cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, func
 
 // wire.go:
 
-func DBEngineFunc(cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, func(), error) {
-	db, err := New(cfgApp, cfgPostgres)
+func DBEngineFunc(ctx context.Context, cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, func(), error) {
+	db, err := New(ctx, cfgApp, cfgPostgres)
 	if err != nil {
 		return nil, nil, err
 	}

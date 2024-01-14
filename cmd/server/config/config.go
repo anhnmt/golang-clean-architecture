@@ -17,18 +17,18 @@ type Config struct {
 	Server   config.Server   `yaml:"server" json:"server"`
 }
 
-func New() (*Config, error) {
-	cfg := &Config{}
+func New() (Config, error) {
+	cfg := Config{}
 
 	dir, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("getwd error: %w", err)
+		return cfg, fmt.Errorf("getwd error: %w", err)
 	}
 
 	path := fmt.Sprintf("%s/%s", dir, "config.yml")
-	err = cleanenv.ReadConfig(filepath.ToSlash(path), cfg)
+	err = cleanenv.ReadConfig(filepath.ToSlash(path), &cfg)
 	if err != nil {
-		return nil, fmt.Errorf("read config error: %w", err)
+		return cfg, fmt.Errorf("read config error: %w", err)
 	}
 
 	return cfg, nil

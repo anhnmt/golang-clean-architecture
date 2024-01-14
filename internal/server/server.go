@@ -75,8 +75,6 @@ func (s *server) Start(ctx context.Context) error {
 			),
 		}
 
-		srv.Close()
-
 		// run the server
 		return srv.ListenAndServe()
 	})
@@ -85,5 +83,7 @@ func (s *server) Start(ctx context.Context) error {
 }
 
 func (s *server) Close() {
-	s.grpcServer.GracefulStop()
+	if s.grpcServer != nil {
+		s.grpcServer.GracefulStop()
+	}
 }
