@@ -22,7 +22,7 @@ type postgres struct {
 	pool *pgxpool.Pool
 }
 
-func New(cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, error) {
+func New(ctx context.Context, cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, error) {
 	dsn := url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(cfgPostgres.User, cfgPostgres.Password),
@@ -64,15 +64,15 @@ func New(cfgApp config.App, cfgPostgres config.Postgres) (DBEngine, error) {
 		return nil, fmt.Errorf("connTimeout - time.ParseDuration: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
+	newCtx, cancel := context.WithTimeout(ctx, connTimeout)
 	defer cancel()
 
-	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	pool, err := pgxpool.NewWithConfig(newCtx, poolConfig)
 	if err != nil {
 		return nil, fmt.Errorf("pgxpool.NewWithConfig err: %w", err)
 	}
 
-	if err = pool.Ping(ctx); err != nil {
+	if err = pool.Ping(newCtx); err != nil {
 		return nil, fmt.Errorf("postgres ping err: %w", err)
 	}
 
