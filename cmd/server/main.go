@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/anhnmt/golang-clean-architecture/cmd/server/config"
+	"github.com/anhnmt/golang-clean-architecture/internal/grpc_server"
 	"github.com/anhnmt/golang-clean-architecture/internal/server"
 	"github.com/anhnmt/golang-clean-architecture/pkg/logger"
 	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
@@ -27,15 +28,16 @@ func main() {
 		Any("server", cfg.Server).
 		Msg("Hello, World!")
 
-	_, cleanup, err := postgres.NewDBEngine(cfg.App, cfg.Postgres)
+	pg, cleanup, err := postgres.NewDBEngine(cfg.App, cfg.Postgres)
 	if err != nil {
 		log.Panic().Err(err).Msg("failed to connect to postgres")
-		return
 	}
-
 	defer cleanup()
 
-	srv := server.New(cfg.Server)
+	grpcServer := grpc_server.New(cfg.Server.Grpc)
+
+	srv := server.NewServerEngine(cfg.Server, pg, grpcServer)
+	defer srv.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
