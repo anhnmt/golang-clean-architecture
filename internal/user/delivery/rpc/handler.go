@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 
-	"github.com/google/wire"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 
@@ -13,10 +12,9 @@ import (
 
 var _ gen.UserServiceServer = (*handler)(nil)
 
-var UserHandlerSet = wire.NewSet(New)
-
 type handler struct {
 	gen.UnimplementedUserServiceServer
+
 	uc usecase.UseCase
 }
 

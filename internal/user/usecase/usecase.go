@@ -1,12 +1,8 @@
 package usecase
 
 import (
-	"github.com/google/wire"
-
 	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
-
-var UserUseCaseSet = wire.NewSet(New)
 
 type UseCase interface {
 }
