@@ -7,6 +7,7 @@
 package server
 
 import (
+	"github.com/anhnmt/golang-clean-architecture/internal/service"
 	"github.com/anhnmt/golang-clean-architecture/internal/user/delivery/rpc"
 	"github.com/anhnmt/golang-clean-architecture/internal/user/usecase"
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
@@ -23,6 +24,7 @@ import (
 func NewServerEngine(cfg config.Server, pg postgres.DBEngine, grpcServer *grpc.Server) Server {
 	useCase := usecase.New(pg)
 	userServiceServer := rpc.New(grpcServer, useCase)
-	serverServer := New(cfg, pg, grpcServer, userServiceServer)
+	serviceService := service.New(userServiceServer)
+	serverServer := New(cfg, pg, grpcServer, serviceService)
 	return serverServer
 }

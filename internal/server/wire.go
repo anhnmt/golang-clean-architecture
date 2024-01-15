@@ -7,8 +7,7 @@ import (
 	"github.com/google/wire"
 	"google.golang.org/grpc"
 
-	"github.com/anhnmt/golang-clean-architecture/internal/user/delivery/rpc"
-	"github.com/anhnmt/golang-clean-architecture/internal/user/usecase"
+	"github.com/anhnmt/golang-clean-architecture/internal/service"
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
 	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
@@ -20,7 +19,6 @@ func NewServerEngine(
 ) Server {
 	panic(wire.Build(
 		New,
-		usecase.UserUseCaseSet,
-		rpc.UserHandlerSet,
+		service.ServiceProviderSet,
 	))
 }

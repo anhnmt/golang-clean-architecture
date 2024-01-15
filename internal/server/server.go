@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
-	gen "github.com/anhnmt/golang-clean-architecture/api/protobuf/gen"
+	"github.com/anhnmt/golang-clean-architecture/internal/service"
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
 	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
@@ -31,8 +31,7 @@ func New(
 	cfg config.Server,
 	pg postgres.DBEngine,
 	grpcServer *grpc.Server,
-
-	_ gen.UserServiceServer,
+	_ service.Service,
 ) Server {
 	return &server{
 		cfg:        cfg,
