@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/google/wire"
 
-	gen "github.com/anhnmt/golang-clean-architecture/api/protobuf/gen"
+	userv1 "github.com/anhnmt/golang-clean-architecture/api/protobuf/user/v1"
 	"github.com/anhnmt/golang-clean-architecture/internal/user"
 )
 
@@ -19,7 +19,7 @@ type service struct {
 }
 
 func New(
-	_ gen.UserServiceServer,
+	_ userv1.UserServiceServer,
 ) Service {
 	return &service{}
 }
