@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 
 	"connectrpc.com/vanguard/vanguardgrpc"
 	"github.com/rs/zerolog/log"
@@ -48,7 +48,14 @@ func (s *server) Start(ctx context.Context) error {
 			addr := fmt.Sprintf("%s:%d", s.cfg.Pprof.Host, s.cfg.Pprof.Port)
 			log.Info().Msgf("Starting pprof http://%s", addr)
 
-			return http.ListenAndServe(addr, nil)
+			mux := http.NewServeMux()
+			mux.HandleFunc("/debug/pprof/", pprof.Index)
+			mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+			mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+			mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+			mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+			return http.ListenAndServe(addr, mux)
 		})
 	}
 
