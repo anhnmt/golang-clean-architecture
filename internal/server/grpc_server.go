@@ -1,4 +1,4 @@
-package grpc_server
+package server
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
@@ -36,7 +38,7 @@ func InterceptorLogger(l zerolog.Logger) logging.Logger {
 	})
 }
 
-func New(cfg config.Grpc) *grpc.Server {
+func NewGrpcServer(cfg config.Grpc) *grpc.Server {
 	logger := InterceptorLogger(log.Logger)
 
 	logEvents := []logging.LoggableEvent{
@@ -68,11 +70,17 @@ func New(cfg config.Grpc) *grpc.Server {
 	}
 
 	// register grpc service server
-	grpcServer := grpc.NewServer(
+	s := grpc.NewServer(
 		grpc.ChainStreamInterceptor(streamInterceptors...),
 		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 	)
-	reflection.Register(grpcServer)
 
-	return grpcServer
+	// register grpc health check
+	healthcheck := health.NewServer()
+	healthgrpc.RegisterHealthServer(s, healthcheck)
+
+	// register grpc reflection
+	reflection.Register(s)
+
+	return s
 }
