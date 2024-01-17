@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/anhnmt/golang-clean-architecture/pkg/config"
@@ -68,11 +70,17 @@ func NewGrpcServer(cfg config.Grpc) *grpc.Server {
 	}
 
 	// register grpc service server
-	grpcServer := grpc.NewServer(
+	s := grpc.NewServer(
 		grpc.ChainStreamInterceptor(streamInterceptors...),
 		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 	)
-	reflection.Register(grpcServer)
 
-	return grpcServer
+	// register grpc health check
+	healthcheck := health.NewServer()
+	healthgrpc.RegisterHealthServer(s, healthcheck)
+
+	// register grpc reflection
+	reflection.Register(s)
+
+	return s
 }
