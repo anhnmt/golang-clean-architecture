@@ -1,4 +1,4 @@
-package grpc_server
+package server
 
 import (
 	"context"
@@ -36,7 +36,7 @@ func InterceptorLogger(l zerolog.Logger) logging.Logger {
 	})
 }
 
-func New(cfg config.Grpc) *grpc.Server {
+func NewGrpcServer(cfg config.Grpc) *grpc.Server {
 	logger := InterceptorLogger(log.Logger)
 
 	logEvents := []logging.LoggableEvent{

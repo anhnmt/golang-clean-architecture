@@ -9,7 +9,6 @@ package main
 import (
 	"context"
 	"github.com/anhnmt/golang-clean-architecture/cmd/server/config"
-	"github.com/anhnmt/golang-clean-architecture/internal/grpc_server"
 	"github.com/anhnmt/golang-clean-architecture/internal/server"
 	"github.com/anhnmt/golang-clean-architecture/pkg/postgres"
 )
@@ -34,7 +33,7 @@ func initServerFunc(ctx context.Context, cfg config.Config) (server.Server, func
 		return nil, nil, err
 	}
 
-	grpcServer := grpc_server.New(cfg.Server.Grpc)
+	grpcServer := server.NewGrpcServer(cfg.Server.Grpc)
 	srv := server.NewServerEngine(cfg.Server, pg, grpcServer)
 
 	return srv, func() {
